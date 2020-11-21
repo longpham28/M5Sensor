@@ -2,11 +2,24 @@
 #include <WiFiClientSecure.h>
 #include <M5Stack.h>
 #include "Sensor.hpp"
+#include <ArduinoJson.h>
+#include <PubSubClient.h>
+
 String ssid;
 String password;
 
 WiFiClientSecure *wifiClient;
 File file;
+
+String macAdd;
+
+bool mqttConnected = false;
+String mqttServer = "fc.happysocial.net";
+int mqttPort = 8883;
+String mqttUsername  = "yarukiswitch";
+String mqttPassword = "yarukiyaruki";
+
+PubSubClient *mqttClient = new PubSubClient(*wifiClient);
 
 
 void write() {
@@ -52,6 +65,27 @@ void connectWifi() {
   Serial.println(WiFi.localIP());
   Serial.print("Mac Address: ");
   Serial.println(macAdd);
+}
+
+void connectMQtt() {
+  mqttConnected = false;
+  mqttClient->setServer(mqttServer.c_str(), mqttPort);
+  while (!mqttClient->connected())
+  {
+    Serial.println(macAdd);
+    Serial.println("Connecting to MQTT...");
+    if (mqttClient->connect(macAdd.c_str(), mqttUsername.c_str(), mqttPassword.c_str()))
+    {
+      Serial.println("connected");
+      mqttConnected = true;
+    } else {
+      Serial.print("Failed. Error state=");
+      Serial.print(mqttClient->state());
+      Serial.println("");
+    }
+    delay(1000);
+    randomSeed(micros());
+  }
 }
 
 void setup() {
